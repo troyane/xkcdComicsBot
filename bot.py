@@ -11,6 +11,7 @@ from bot_api_token import XKCD_BOT_API_TOKEN
 
 import states
 import utils
+import math
 
 # Connect to database
 db = Vedis('db')
@@ -21,17 +22,38 @@ logger = logging.getLogger(__name__)
 
 LAST_AVAILABLE_XKCD = 1979
 
+def getComics(request, maxTries=10):
+    """ Returns current comics over given request as JSON object. In case of any problems function returns empty string.
+        Function waits twice longer each time in case of problems with network requests (maximum tries is maxTries)."""
+    tries = 1
+    success = False
+    response = ''
+    while (not success) and (tries < maxTries):
+        timeout = math.pow(2, tries) # wait twice longer each time
+        try:
+            with urllib.request.urlopen(request) as url:
+                response = json.loads(url.read().decode())
+        except:
+            logger.warning("Problem with network or something. Increase timeout to {}s, it is try #{}."
+                           .format(timeout, tries))
+            tries = tries + 1
+            sleep(timeout)
+        else:
+            success = True
+    if response == '':
+        logger.error("Something went wrong with request '{}'. Can't wait longer.".format(request))
+    return response
+
+
 def getCurrentComics():
     CURRENT_COMICS = 'https://xkcd.com/info.0.json'
-    with urllib.request.urlopen(CURRENT_COMICS) as url:
-        return json.loads(url.read().decode())
+    return getComics(CURRENT_COMICS)
 
 def getComicsByNumber(num):
     import numbers
     if isinstance(num, numbers.Number):
         TEMPLATE_URL = 'https://xkcd.com/{}/info.0.json'
-        with urllib.request.urlopen(TEMPLATE_URL.format(num)) as url:
-            return json.loads(url.read().decode())
+        return getComics(TEMPLATE_URL)
     else:
         return ''
 
@@ -103,13 +125,13 @@ def onButtonClicked(bot, update):
         # Remove MENU-message
         bot.delete_message(chat_id=query.message.chat_id, message_id=query.message.message_id)
 
-    state = get_user_state(update)
+    state = getUserState(update)
 
     if state == states.S_START:
         if query.data == states.S_NEWEST:
-            prepared_comics = prepare_comics_to_send(getCurrentComics())
-            send_comics(bot, cur_chat_id, prepared_comics)
-            set_user_state(update, states.S_START)
+            prepared_comics = prepareComicsToSend(getCurrentComics())
+            sendComics(bot, cur_chat_id, prepared_comics)
+            setUserState(update, states.S_START)
 
         if query.data == states.S_NUMBER:
             text2send = 'Please, enter integer number of XKCD comics (first one is #1 and last one is {})'.format(LAST_AVAILABLE_XKCD)
@@ -117,7 +139,7 @@ def onButtonClicked(bot, update):
                              disable_notification=False,
                              parse_mode='Markdown',
                              text=text2send)
-        set_user_state(update, states.S_NUMBER)
+        setUserState(update, states.S_NUMBER)
 
 
 def onMessage(bot, update):
@@ -127,9 +149,9 @@ def onMessage(bot, update):
         # msg = update.effective_message...
         msg = update.effective_message.text
         if utils.RepresentsInt(msg):
-            prepared_comics = prepare_comics_to_send(getComicsByNumber(int(msg)))
-            send_comics(bot, update.effective_chat.id, prepared_comics)
-            set_user_state(update, states.S_START)
+            prepared_comics = prepareComicsToSend(getComicsByNumber(int(msg)))
+            sendComics(bot, update.effective_chat.id, prepared_comics)
+            setUserState(update, states.S_START)
 
 def onHelp(bot, update):
     update.message.reply_text("Use /start to start having fun here.")
