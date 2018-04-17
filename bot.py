@@ -23,7 +23,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 LatestComicsNumber = 1981
-QuestionImage = "question.png"
+QuestionImage = "images/question.png"
 
 def getComics(request, maxTries=10):
     """ Returns current comics over given request as JSON object. In case of any problems function returns empty string.
@@ -88,7 +88,7 @@ keyboard = [
 def onStart(bot, update):
     """ Reaction on start command. Sends photo with menu of inline keyboard buttons. """
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_photo(photo=open('what_xkcd.png', 'rb'), reply_markup=reply_markup)
+    update.message.reply_photo(photo=open('images/what_xkcd.png', 'rb'), reply_markup=reply_markup)
 
 def getUserState(update):
     """ Get user state based on given update's chat_id. Returns one of states defined in states.py.
@@ -151,26 +151,26 @@ def onButtonClicked(bot, update):
 
     user_state = getUserState(update)
 
-    if user_state == states.S_START:
-        if query.data == states.S_NEWEST:
-            prepared_comics = prepareComicsToSend(getCurrentComics())
-            sendComics(bot, cur_chat_id, prepared_comics)
-            setUserState(update, states.S_START)
+    # if user_state == states.S_START:
+    if query.data == states.S_NEWEST:
+        prepared_comics = prepareComicsToSend(getCurrentComics())
+        sendComics(bot, cur_chat_id, prepared_comics)
+        setUserState(update, states.S_START)
 
-        if query.data == states.S_NUMBER:
-            text2send = "Please, enter integer number of XKCD comics (first one is `1` and last one is `{}`)"\
-                        .format(LatestComicsNumber)
-            bot.send_message(chat_id=cur_chat_id,
-                             disable_notification=False,
-                             parse_mode='Markdown',
-                             text=text2send)
-            setUserState(update, states.S_NUMBER)
+    if query.data == states.S_NUMBER:
+        text2send = "Please, enter integer number of XKCD comics (first one is `1` and last one is `{}`)"\
+                    .format(LatestComicsNumber)
+        bot.send_message(chat_id=cur_chat_id,
+                         disable_notification=False,
+                         parse_mode='Markdown',
+                         text=text2send)
+        setUserState(update, states.S_NUMBER)
 
-        if query.data == states.S_RANDOM:
-            random_number = random.randint(1, LatestComicsNumber + 1)
-            prepared_comics = prepareComicsToSend(getComicsByNumber(random_number))
-            sendComics(bot, cur_chat_id, prepared_comics)
-            setUserState(update, states.S_START)
+    if query.data == states.S_RANDOM:
+        random_number = random.randint(1, LatestComicsNumber + 1)
+        prepared_comics = prepareComicsToSend(getComicsByNumber(random_number))
+        sendComics(bot, cur_chat_id, prepared_comics)
+        setUserState(update, states.S_START)
 
 
 def onMessage(bot, update):
@@ -186,7 +186,7 @@ def onMessage(bot, update):
                 return
             else:
                 sendComics(bot, update.effective_chat.id,
-                           ["Unfortunately there is comics with number `{}` :( \n"
+                           ["Unfortunately there is no comics with number `{}` :( \n"
                             "Let's hope that someday there will be even `{}` comics on XKCD! \n\n"                           
                             "But still you can use /menu for another requests.".format(num, num+1), QuestionImage])
                 setUserState(update, states.S_START)
@@ -197,12 +197,14 @@ def onMessage(bot, update):
             sendComics(bot, update.effective_chat.id,
                        ["`{}` is not a valid integer number, you know it. \n\n"
                         "Please, send me *only* number, without any other symbols. "
-                        "Examples of correct numbers: `13`, `42`, `666`, `1000`, ...".format(msg), QuestionImage])
+                        "Examples of correct numbers: `13`, `42`, `666`, `1000`, ...\n\n"
+                        "Or you can use /menu as usual.".format(msg), QuestionImage])
             return
 
     # Problem happened
     sendComics(bot, update.effective_chat.id,
-               ["Something wrong happened. Hope our admins will check logs and solve this problem. "
+               ["We tried to understand your answer, but we forgot what was the question... "
+                "Hope our admins will check logs and solve this problem in newer versions of this bot. \n\n"
                 "Meanwhile you can use /menu for another requests.", QuestionImage])
     setUserState(update, states.S_START)
 
@@ -230,15 +232,16 @@ def stopCheckingForLatestComics():
 def checkForLatestComics(delay=600):
     global needToCheckLastComics
     while needToCheckLastComics:
-        LatestComicsNumber = numberOfComics(getComics('https://xkcd.com/info.0.json'))
-        # write to DB
-        logger.info("Checked. Latest number is {}. Next check will be done in {}s.".format(LatestComicsNumber, delay))
-        for i in range(1, delay):
-            if not needToCheckLastComics:
-                logger.info("Stop checking for new comics.")
-                return
-            else:
-                sleep(1)
+        newNum = numberOfComics(getComics('https://xkcd.com/info.0.json'))
+        if newNum is not UNDEFINED:
+            LatestComicsNumber = newNum
+            logger.info("Checked. Latest number is {}. Next check will be done in {}s.".format(LatestComicsNumber, delay))
+            for i in range(1, delay):
+                if not needToCheckLastComics:
+                    logger.info("Stop checking for new comics.")
+                    return
+                else:
+                    sleep(1)
     logger.info("Stop checking for new comics.")
 
 
@@ -256,6 +259,7 @@ def main():
     checker = Thread(target=startCheckerForLatestComics, args=(checkerLoop,))
     checker.start()
     checkerLoop.call_soon_threadsafe(checkForLatestComics)
+
     logger.info("Started new thread for checking latest comics.")
 
 
