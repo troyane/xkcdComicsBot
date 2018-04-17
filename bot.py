@@ -10,7 +10,7 @@ from vedis import Vedis
 import latest_comics_checker as Checker
 import comics as Comics
 import states
-from bot_api_token import XKCD_BOT_API_TOKEN
+import bot_api_token as Secrets
 
 # Connect to database
 db = Vedis('db')
@@ -175,7 +175,7 @@ def main():
     logger.info("Started new thread for checking latest comics.")
 
     # Create the Updater and pass it your bot's token
-    updater = Updater(XKCD_BOT_API_TOKEN)
+    updater = Updater(Secrets.XKCD_BOT_API_TOKEN)
 
     updater.dispatcher.add_handler(CommandHandler('start', onStart))
     updater.dispatcher.add_handler(CommandHandler('menu', onStart))
