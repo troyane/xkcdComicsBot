@@ -4,4 +4,3 @@ def RepresentsInt(s):
         return True
     except ValueError:
         return False
-
