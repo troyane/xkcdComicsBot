@@ -1,19 +1,19 @@
 import logging
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
-from emoji import emojize
-from time import sleep
-
-import urllib.request, json
-
-from vedis import Vedis
-
-from bot_api_token import XKCD_BOT_API_TOKEN
-
-import states
 import utils
 import math
 import random
+import asyncio
+from time import sleep
+from threading import Thread
+import urllib.request, json
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
+from emoji import emojize
+from vedis import Vedis
+
+
+import states
+from bot_api_token import XKCD_BOT_API_TOKEN
 
 # Connect to database
 db = Vedis('db')
@@ -243,10 +243,6 @@ def checkForLatestComics(delay=600):
                 else:
                     sleep(1)
     logger.info("Stop checking for new comics.")
-
-
-import asyncio
-from threading import Thread
 
 def startCheckerForLatestComics(loop):
     """ Switch to new event loop and run forever """

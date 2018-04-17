@@ -1,6 +1,5 @@
 # States
 
-
 S_START  = 'START'  # default value
 S_NEWEST = 'NEWEST'
 S_RANDOM = 'RANDOM'
