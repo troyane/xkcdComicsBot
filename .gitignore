@@ -1,6 +1,7 @@
 # Project-specific files
 bot_api_token.py
 db
+db_vedis_journal
 .idea
 
 # Byte-compiled / optimized / DLL files
