@@ -91,7 +91,7 @@ def sendComics(bot, cur_chat_id, prepared_comics):
     else:
         bot.send_photo(chat_id=cur_chat_id, disable_notification=True, photo=prepared_comics[1])
     bot.send_message(chat_id=cur_chat_id, disable_notification=False, parse_mode='Markdown', text=prepared_comics[0])
-    logger.info("sent: {} -- {}".format(prepared_comics[0], prepared_comics[1]))
+    # logger.info("sent: {} -- {}".format(prepared_comics[0], prepared_comics[1]))
 
 def onButtonClicked(bot, update):
     query = update.callback_query
@@ -103,6 +103,7 @@ def onButtonClicked(bot, update):
         return
 
     user_state = getUserState(update)
+    # TODO: Use user_state later, when there will be search
 
     # if user_state == states.S_START:
     if query.data == states.S_NEWEST:
