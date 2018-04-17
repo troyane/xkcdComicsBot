@@ -1,6 +1,7 @@
 # Project-specific files
 bot_api_token.py
 db
+.idea
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
