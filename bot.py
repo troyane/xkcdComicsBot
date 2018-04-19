@@ -87,9 +87,10 @@ def prepareComicsToSend(comics):
 def sendComics(bot, cur_chat_id, prepared_comics):
     """ Sends prepared comics: first -- sends image, then -- formatted text related to comics. """
     if prepared_comics[1] == QuestionImage:
-        bot.send_photo(chat_id=cur_chat_id, disable_notification=True, photo=open(QuestionImage, 'rb'))
+        foto = open(QuestionImage, 'rb')
     else:
-        bot.send_photo(chat_id=cur_chat_id, disable_notification=True, photo=prepared_comics[1])
+        foto = prepared_comics[1]
+    bot.send_photo(chat_id=cur_chat_id, disable_notification=True, photo=foto)
     bot.send_message(chat_id=cur_chat_id, disable_notification=False, parse_mode='Markdown', text=prepared_comics[0])
     # logger.info("sent: {} -- {}".format(prepared_comics[0], prepared_comics[1]))
 
