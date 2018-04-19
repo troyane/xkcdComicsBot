@@ -91,7 +91,8 @@ def sendComics(bot, cur_chat_id, prepared_comics):
     else:
         foto = prepared_comics[1]
     bot.send_photo(chat_id=cur_chat_id, disable_notification=True, photo=foto)
-    bot.send_message(chat_id=cur_chat_id, disable_notification=False, parse_mode='Markdown', text=prepared_comics[0])
+    bot.send_message(chat_id=cur_chat_id, disable_notification=False, parse_mode='Markdown', text=prepared_comics[0],
+                     disable_web_page_preview=True)
     # logger.info("sent: {} -- {}".format(prepared_comics[0], prepared_comics[1]))
 
 def onButtonClicked(bot, update):
