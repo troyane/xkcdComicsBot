@@ -23,13 +23,13 @@ QuestionImage = "images/question.png"
 
 # Inline keyboard menu with respective callbacks. Instantiated once.
 keyboard = [
-    [ InlineKeyboardButton(emojize("Show Newest Comics :new:", use_aliases=True),
+    [ InlineKeyboardButton(emojize("See Newest Comics :new:", use_aliases=True),
                            callback_data=states.S_NEWEST) ],
 
-    [ InlineKeyboardButton(emojize("Show Random Comics :twisted_rightwards_arrows:", use_aliases=True),
+    [ InlineKeyboardButton(emojize("See Random Comics :twisted_rightwards_arrows:", use_aliases=True),
                            callback_data=states.S_RANDOM) ],
 
-    [ InlineKeyboardButton(emojize("Show Comics by its Number :1234: ...", use_aliases=True),
+    [ InlineKeyboardButton(emojize("See Comics by its Number :1234: ...", use_aliases=True),
                            callback_data=states.S_NUMBER) ]
     # TODO: Implement search
     # ,
