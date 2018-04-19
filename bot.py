@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 QuestionImage = "images/question.png"
 
 # Inline keyboard menu with respective callbacks. Instantiated once.
-keyboard = [
+menu_keyboard = [
     [ InlineKeyboardButton(emojize("Show Newest Comics :new:", use_aliases=True),
                            callback_data=states.S_NEWEST) ],
 
@@ -40,7 +40,7 @@ keyboard = [
 
 def onStart(bot, update):
     """ Reaction on start command. Sends photo with menu of inline keyboard buttons. """
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(menu_keyboard)
     update.message.reply_photo(photo=open('images/what_xkcd.png', 'rb'), reply_markup=reply_markup)
 
 def getUserState(update):
@@ -64,12 +64,36 @@ def setUserState(update, state):
     chat_id_state = '{}/state'.format(chat_id)
     db[chat_id_state] = state
 
+
+def getUserComicsNumber(update):
+    UNDEFINED = -1
+
+    import numbers
+
+    chat_id = update.effective_chat.id
+    if chat_id == '':
+        return UNDEFINED
+    chat_id_num = '{}/num'.format(chat_id)
+
+    if db.exists(chat_id_num):
+        num = int(db[chat_id_num])
+        if isinstance(num, numbers.Number):
+            return int(db[chat_id_num])
+        else:
+            logger.warning("Something strange. Wrong user's num: {}".format(num))
+    return UNDEFINED
+
+def setUsersComicsNumber(update, num):
+    chat_id = update.effective_chat.id
+    chat_id_num = '{}/num'.format(chat_id)
+    db[chat_id_num] = num
+
 def prepareComicsToSend(comics):
     """ Expects JSON comics. Prepare it using Markdown formatting.
         Returns [formatted text, link to image]. In case of any problems -- returns empty list """
 
     problem = ["Something went wrong... Next time we'll try to find your comics! Open /menu again.",
-               QuestionImage]
+               QuestionImage, Checker.UNDEFINED]
 
     if not comics:
         logger.warning("Empty comics given. Nothing to do here.")
@@ -82,7 +106,23 @@ def prepareComicsToSend(comics):
     date = '{}/{}/{}'.format(comics['day'], comics['month'], comics['year'])
     link = '["{}" comics on XKCD](https://xkcd.com/{})'.format(comics['title'], comics['num'])
     text2send = '*{}. {}*. {}\n\n_{}_, {}'.format(comics['num'], comics['title'], comics['alt'], date, link)
-    return [text2send, comics['img']]
+    return [text2send, comics['img'], comics['num']]
+
+# Inline keyboard for comics with respective callbacks. Instantiated once.
+comics_keyboard = InlineKeyboardMarkup([
+    [   # First row
+        InlineKeyboardButton(emojize("|<", use_aliases=True), callback_data=states.S_OLDEST),
+        InlineKeyboardButton(emojize("< Prev", use_aliases=True), callback_data=states.S_PREV),
+        InlineKeyboardButton(emojize("Random", use_aliases=True), callback_data=states.S_RANDOM),
+        InlineKeyboardButton(emojize("Next >", use_aliases=True), callback_data=states.S_NEXT),
+        InlineKeyboardButton(emojize(">|", use_aliases=True), callback_data=states.S_NEWEST)
+    ]
+    # ,
+    # [   # Second row
+    #     InlineKeyboardButton(emojize("Menu", use_aliases=True), callback_data="Menu"),
+    #     InlineKeyboardButton(emojize("Search", use_aliases=True), callback_data="Search")
+    # ]
+])
 
 def sendComics(bot, cur_chat_id, prepared_comics):
     """ Sends prepared comics: first -- sends image, then -- formatted text related to comics. """
@@ -91,7 +131,10 @@ def sendComics(bot, cur_chat_id, prepared_comics):
     else:
         foto = prepared_comics[1]
     bot.send_photo(chat_id=cur_chat_id, disable_notification=True, photo=foto)
-    bot.send_message(chat_id=cur_chat_id, disable_notification=False, parse_mode='Markdown', text=prepared_comics[0])
+    bot.send_message(chat_id=cur_chat_id, disable_notification=True, parse_mode='Markdown',
+                     disable_web_page_preview=True, text=prepared_comics[0])
+    bot.send_message(chat_id=cur_chat_id, disable_notification=True, parse_mode='Markdown',
+                     text='What are you going to do next?', reply_markup=comics_keyboard)
     # logger.info("sent: {} -- {}".format(prepared_comics[0], prepared_comics[1]))
 
 def onButtonClicked(bot, update):
@@ -110,6 +153,14 @@ def onButtonClicked(bot, update):
     if query.data == states.S_NEWEST:
         prepared_comics = prepareComicsToSend(Comics.getCurrentComics())
         sendComics(bot, cur_chat_id, prepared_comics)
+        setUsersComicsNumber(update, prepared_comics[2])
+        setUserState(update, states.S_START)
+
+    # if user_state == states.S_START:
+    if query.data == states.S_OLDEST:
+        prepared_comics = prepareComicsToSend(Comics.getComicsByNumber(1))
+        sendComics(bot, cur_chat_id, prepared_comics)
+        setUsersComicsNumber(update, prepared_comics[2])
         setUserState(update, states.S_START)
 
     if query.data == states.S_NUMBER:
@@ -125,7 +176,35 @@ def onButtonClicked(bot, update):
         random_number = random.randint(1, Checker.LatestComicsNumber + 1)
         prepared_comics = prepareComicsToSend(Comics.getComicsByNumber(random_number))
         sendComics(bot, cur_chat_id, prepared_comics)
+        setUsersComicsNumber(update, prepared_comics[2])
         setUserState(update, states.S_START)
+
+    if query.data == states.S_PREV:
+        currentNum = getUserComicsNumber(update)
+        if currentNum == Checker.UNDEFINED:
+            newNum = Checker.LatestComicsNumber - 1
+        newNum = currentNum - 1
+        if Comics.comicsAvailable(newNum):
+            prepared_comics = prepareComicsToSend(Comics.getComicsByNumber(newNum))
+            sendComics(bot, cur_chat_id, prepared_comics)
+            setUsersComicsNumber(update, prepared_comics[2])
+            setUserState(update, states.S_START)
+
+    if query.data == states.S_NEXT:
+        currentNum = getUserComicsNumber(update)
+
+        newNum = currentNum + 1
+        if Comics.comicsAvailable(newNum):
+            prepared_comics = prepareComicsToSend(Comics.getComicsByNumber(newNum))
+            sendComics(bot, cur_chat_id, prepared_comics)
+            setUsersComicsNumber(update, prepared_comics[2])
+        else:
+            prepared_comics = [QuestionImage,
+                               "Unfortunately we can't get your {} comics. Probably it will be ready soon. "
+                               "XKCD updates every Monday, Wednesday, and Friday.".format(currentNum)]
+            sendComics(bot, cur_chat_id, prepared_comics)
+
+    setUserState(update, states.S_START)
 
 def onMessage(bot, update):
     state = getUserState(update)
