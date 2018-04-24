@@ -64,7 +64,6 @@ def setUserState(update, state):
     chat_id_state = '{}/state'.format(chat_id)
     db[chat_id_state] = state
 
-
 def getUserComicsNumber(update):
     UNDEFINED = -1
 
@@ -151,7 +150,7 @@ def onButtonClicked(bot, update):
 
     # if user_state == states.S_START:
     if query.data == states.S_NEWEST:
-        prepared_comics = prepareComicsToSend(Comics.getCurrentComics())
+        prepared_comics = prepareComicsToSend(Comics.getLatestComics())
         sendComics(bot, cur_chat_id, prepared_comics)
         setUsersComicsNumber(update, prepared_comics[2])
         setUserState(update, states.S_START)
@@ -184,7 +183,7 @@ def onButtonClicked(bot, update):
         if currentNum == Checker.UNDEFINED:
             newNum = Checker.LatestComicsNumber - 1
         newNum = currentNum - 1
-        if Comics.comicsAvailable(newNum):
+        if Comics.isComicsAvailable(newNum):
             prepared_comics = prepareComicsToSend(Comics.getComicsByNumber(newNum))
             sendComics(bot, cur_chat_id, prepared_comics)
             setUsersComicsNumber(update, prepared_comics[2])
@@ -194,7 +193,7 @@ def onButtonClicked(bot, update):
         currentNum = getUserComicsNumber(update)
 
         newNum = currentNum + 1
-        if Comics.comicsAvailable(newNum):
+        if Comics.isComicsAvailable(newNum):
             prepared_comics = prepareComicsToSend(Comics.getComicsByNumber(newNum))
             sendComics(bot, cur_chat_id, prepared_comics)
             setUsersComicsNumber(update, prepared_comics[2])
@@ -212,7 +211,7 @@ def onMessage(bot, update):
         msg = update.effective_message.text
         if utils.RepresentsInt(msg):
             num = int(msg)
-            if Comics.comicsAvailable(num):
+            if Comics.isComicsAvailable(num):
                 prepared_comics = prepareComicsToSend(Comics.getComicsByNumber(num))
                 sendComics(bot, update.effective_chat.id, prepared_comics)
                 setUserState(update, states.S_START)

@@ -31,12 +31,12 @@ def getComics(request, maxTries=10):
         logger.error("Something went wrong with request '{}'. Can't wait longer.".format(request))
     return response
 
-def getCurrentComics():
+def getLatestComics():
     """ Returns current (latest one) comics. Link for latest comics is hardcoded here. """
     CURRENT_COMICS = 'https://xkcd.com/info.0.json'
     return getComics(CURRENT_COMICS)
 
-def comicsAvailable(num):
+def isComicsAvailable(num):
     if (num > 0) and (num <= Checker.LatestComicsNumber):
         return True
     else:
@@ -46,7 +46,7 @@ def getComicsByNumber(num):
     """ Returns comics by its number. There is number check. """
     import numbers
     if isinstance(num, numbers.Number):
-        if comicsAvailable(num):
+        if isComicsAvailable(num):
             TEMPLATE_URL = 'https://xkcd.com/{}/info.0.json'.format(num)
             return getComics(TEMPLATE_URL)
     return ''
