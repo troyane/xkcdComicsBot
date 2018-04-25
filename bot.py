@@ -110,11 +110,11 @@ def prepareComicsToSend(comics):
 # Inline keyboard for comics with respective callbacks. Instantiated once.
 comics_keyboard = InlineKeyboardMarkup([
     [   # First row
-        InlineKeyboardButton(emojize("|<", use_aliases=True), callback_data=states.S_OLDEST),
-        InlineKeyboardButton(emojize("< Prev", use_aliases=True), callback_data=states.S_PREV),
-        InlineKeyboardButton(emojize("Random", use_aliases=True), callback_data=states.S_RANDOM),
-        InlineKeyboardButton(emojize("Next >", use_aliases=True), callback_data=states.S_NEXT),
-        InlineKeyboardButton(emojize(">|", use_aliases=True), callback_data=states.S_NEWEST)
+        InlineKeyboardButton(emojize(" |< ",    use_aliases=True), callback_data=states.S_OLDEST),
+        InlineKeyboardButton(emojize("< Prev",  use_aliases=True), callback_data=states.S_PREV),
+        InlineKeyboardButton(emojize("Random",  use_aliases=True), callback_data=states.S_RANDOM),
+        InlineKeyboardButton(emojize("Next >",  use_aliases=True), callback_data=states.S_NEXT),
+        InlineKeyboardButton(emojize(" >| ",    use_aliases=True), callback_data=states.S_NEWEST)
     ]
     # ,
     # [   # Second row
