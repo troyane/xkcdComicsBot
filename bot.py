@@ -131,9 +131,7 @@ def sendComics(bot, cur_chat_id, prepared_comics):
         foto = prepared_comics[1]
     bot.send_photo(chat_id=cur_chat_id, disable_notification=True, photo=foto)
     bot.send_message(chat_id=cur_chat_id, disable_notification=True, parse_mode='Markdown',
-                     disable_web_page_preview=True, text=prepared_comics[0])
-    bot.send_message(chat_id=cur_chat_id, disable_notification=True, parse_mode='Markdown',
-                     text='What are you going to do next?', reply_markup=comics_keyboard)
+                     disable_web_page_preview=True, text=prepared_comics[0], reply_markup=comics_keyboard)
     # logger.info("sent: {} -- {}".format(prepared_comics[0], prepared_comics[1]))
 
 def onButtonClicked(bot, update):
