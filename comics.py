@@ -1,4 +1,5 @@
 import logging
+import random
 import math
 import urllib.request, json
 from time import sleep
@@ -35,6 +36,15 @@ def getLatestComics():
     """ Returns current (latest one) comics. Link for latest comics is hardcoded here. """
     CURRENT_COMICS = 'https://xkcd.com/info.0.json'
     return getComics(CURRENT_COMICS)
+
+def getOldestComics():
+    """ Returns first comics, oldest comics. """
+    return getComicsByNumber(1)
+
+def getRandomComics():
+    """ Returns random comics. """
+    random_number = random.randint(1, Checker.LatestComicsNumber + 1)
+    return getComicsByNumber(random_number)
 
 def isComicsAvailable(num):
     if (num > 0) and (num <= Checker.LatestComicsNumber):
